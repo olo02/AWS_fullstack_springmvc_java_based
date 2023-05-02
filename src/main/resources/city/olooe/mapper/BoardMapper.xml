@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="city.olooe.mapper.BoardMapper">
+    <sql id="search">
+        <trim prefix="and (" suffix=")" prefixOverrides="or">
+            <foreach collection="typeArr" item="t">
+                <trim prefix="or">
+                    <choose>
+                        <when test="t == 'T'.toString()">
+                            title like concat(concat('%', #{keyword}), '%')
+                            <!--                        title like '%'||#{keyword}||'%'-->
+                        </when>
+                        <when test="t == 'C'.toString()">
+                            content like concat(concat('%', #{keyword}), '%')
+                            <!--                        content like '%'||#{keyword}||'%'-->
+                        </when>
+                        <when test="t == 'W'.toString()">
+                            writer like concat(concat('%', #{keyword}), '%')
+                        </when>
+                    </choose>
+                </trim>
+            </foreach>
+        </trim>
+    </sql>
+
+    <select id="getList" resultType="board">
+        select * from tbl_board
+    </select>
+
+    <select id="getListWithPaging" resultType="board">
+        select
+        *
+        FROM tbl_board tb
+        where bno > 0
+        <include refid="search" />
+        order by bno desc
+        limit #{amount} offset #{offset}
+    </select>
+
+    <insert id="insert">
+        insert into tbl_board (bno, title, content, writer) values (nextval(seq_board), #{title}, #{content}, #{writer})
+    </insert>
+
+    <insert id="insertSelectKey">
+        <selectKey keyProperty="bno" order="BEFORE" resultType="long">
+            select nextval(seq_board) from dual
+        </selectKey>
+        insert into tbl_board (bno, title, content, writer) values (#{bno}, #{title}, #{content}, #{writer})
+    </insert>
+
+    <select id="read" resultMap="boardMap">
+        select * from tbl_board left join tbl_attach ta using(bno) where bno = #{bno}
+    </select>
+
+    <resultMap id="boardMap" type="board">
+        <result property="bno" column="bno" />
+        <result property="title" column="title" />
+        <result property="content" column="content" />
+        <result property="writer" column="writer" />
+        <result property="regdate" column="regdate" />
+        <result property="updatedate" column="updatedate" />
+        <collection property="attaches" resultMap="attachMap" />
+    </resultMap>
+
+    <resultMap id="attachMap" type="attach">
+        <result property="bno" column="bno"/>
+        <result property="name" column="name"/>
+        <result property="path" column="path"/>
+        <result property="uuid" column="uuid"/>
+        <result property="image" column="image"/>
+    </resultMap>
+
+    <delete id="delete">
+        delete from tbl_board where bno = #{bno}
+    </delete>
+
+    <update id="update">
+        update tbl_board set title = #{title}, content = #{content}, writer = #{writer}, updatedate = now() where bno = #{bno}
+    </update>
+    <update id="updateReplyCnt">
+
+    </update>
+
+    <select id="getTotalCnt" resultType="int">
+        select count(*)
+        from tbl_board
+        where bno > 0
+        <include refid="search" />
+    </select>
+</mapper>

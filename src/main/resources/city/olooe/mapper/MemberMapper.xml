@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="city.olooe.mapper.MemberMapper">
+    <select id="read" resultMap="memberMap">
+        select userid, userpw, username, regdate, updatedate, enabled, auth
+        from tbl_member tm
+        left join tbl_auth ta using(userid)
+        where userid = #{userid}
+    </select>
+
+    <resultMap id="memberMap" type="member">
+        <result column="userid" property="userid" />
+        <result column="userpw" property="userpw" />
+        <result column="username" property="userName" />
+        <result column="regdate" property="regDate" />
+        <result column="updatedate" property="updateDate" />
+        <collection property="auths" resultMap="authMap"/>
+    </resultMap>
+
+    <resultMap id="authMap" type="auth">
+        <result property="userid" column="userid"/>
+        <result property="auth" column="auth"/>
+    </resultMap>
+</mapper>
